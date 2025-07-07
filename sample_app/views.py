@@ -3,6 +3,12 @@ from django.forms import ModelForm
 
 from sample_app.models import Post
 
+def index(request):
+    """
+    トップページ
+    """
+    # ページロード時は questionnaire_content.html を呼び出す
+    return render(request, 'sample_app/questionnaire_content.html')  # 呼び出す Template
 
 def create_post(request):
     """
