@@ -1,0 +1,25 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<link rel="stylesheet" href="{% static 'styles/styles.css' %}">
+<head>
+    <meta charset="UTF-8">
+    <title>Questionnaire content</title>
+</head>
+<body>
+    チーム [3]では、[より多くの人にとって操作がしやすいVRを用いた体験型医療トレーニング] であると考えています。
+    この社会的価値が適切か否かを客観的に把握するために、
+    以下の項目のアンケート調査を行います。
+
+    <a href="{% url 'sample_app:create_post' %}">アンケートフォームに飛ぶ</a>
+    <style>
+        body {
+            color: #333;
+            font-size: 30px;
+        }
+        a {
+            color: orange;
+        }
+    </style>
+</body>
+</html>
