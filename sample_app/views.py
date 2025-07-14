@@ -7,8 +7,16 @@ def index(request):
     """
     トップページ
     """
-    # ページロード時は questionnaire_content.html を呼び出す
-    return render(request, 'sample_app/questionnaire_content.html')  # 呼び出す Template
+    # PostFormのインスタンスを作成
+    form = PostForm()
+
+    # contextにフォームを追加
+    context = {
+        'form': form,
+    }
+    
+    # contextをテンプレートに渡してレンダリング
+    return render(request, 'sample_app/index.html', context)
 
 def create_post(request):
     """
@@ -100,4 +108,23 @@ class PostForm(ModelForm):
     class Meta:
         model = Post
         # fields は models.py で定義している変数名
-        fields = ('name', 'micropost')
+        fields = ('Q1', 'micropost')
+        
+def questionnaire_view(request):
+    # ... (既存のアンケートビューのロジック) ...
+    if request.method == 'POST':
+        # ... (既存のPOST処理ロジック) ...
+        # リダイレクト先を新しい完了ページに変更
+        return redirect('sample_app:questionnaire_complete')
+
+# 新しく完了ページ用のビューを追加
+def questionnaire_complete_view(request):
+    return render(request, 'sample_app/questionnaire_complete.html')
+
+
+# def index_view(request):
+#     # 他のテンプレートに渡したいデータがあれば、contextに追加します
+#     context = {
+#         'some_key': 'some_value',
+#     }
+#     return render(request, 'sample_app/index.html', context)
