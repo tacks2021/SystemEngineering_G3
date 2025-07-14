@@ -1,0 +1,27 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>インデックスページ</title>
+    {# もしスタイルシートがあるならここで読み込みます #}
+    <link rel="stylesheet" href="{% static 'sample_app/styles/styles.css' %}">
+</head>
+<body>
+
+    {# questionnaire_content.html の内容をここに挿入 #}
+    <div id="questionnaire-section">
+        {% include 'sample_app/questionnaire_content.html' %}
+    </div>
+
+    <hr>
+
+    {# post_form.html の内容をここに挿入 #}
+    <div id="post-form-section">
+        {% include 'sample_app/post_form.html' %}
+    </div>
+
+    {# その他のコンテンツ #}
+
+</body>
+</html>

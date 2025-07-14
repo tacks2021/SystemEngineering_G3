@@ -5,16 +5,22 @@
     <title>Post Form</title>
 </head>
 <body>
-    <h4>Post の編集</h4>
-    {% if post_id %}
-    <form action="{% url 'sample_app:edit_post' post_id=post_id %}" method="post">
-    {% else %}
+
+    <h3>Post の編集</h3>
+
+    {# フォームを送信するためのformタグ #}
     <form action="{% url 'sample_app:create_post' %}" method="post">
-    {% endif %}
-      {% csrf_token %}
-      {{ form }}
-          <button type="submit">送信</button>
+        
+        {# セキュリティ対策のための必須タグ #}
+        {% csrf_token %}
+        
+        {# フォームの入力欄を段落(<p>)として表示します #}
+        {{ form.as_p }}
+        
+        {# 送信ボタン #}
+        <button type="submit">送信</button>
     </form>
+
     <a href="{% url 'sample_app:index' %}">戻る</a>
 </body>
 </html>

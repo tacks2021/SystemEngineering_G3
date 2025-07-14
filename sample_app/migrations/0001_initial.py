@@ -15,7 +15,7 @@ class Migration(migrations.Migration):
             name='Post',
             fields=[
                 ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('name', models.CharField(max_length=15, verbose_name='user name')),
+                ('Q1', models.CharField(max_length=15, verbose_name='Q1')),
                 ('micropost', models.CharField(blank=True, max_length=140, verbose_name='tweet')),
             ],
         ),
