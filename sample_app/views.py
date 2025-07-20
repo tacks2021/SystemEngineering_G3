@@ -1,130 +1,69 @@
-from django.shortcuts import render, get_object_or_404, redirect
-from django.forms import ModelForm
+# sample_app/views.py
 
-from sample_app.models import Post
+import csv
+from django.http import HttpResponse
+from django.shortcuts import render, redirect
+from .models import Question, Choice, Submission, Answer # 正しいモデルをインポート
+
+# アンケート表示・回答処理ビュー
+def questionnaire_view(request):
+    questions = Question.objects.all()
+    if request.method == 'POST':
+        submission = Submission.objects.create()
+
+        for question in questions:
+            answer_value = request.POST.get(f'answer_for_question_{question.id}')
+            
+            if answer_value:
+                # 選択式の質問の場合
+                if question.question_type == 'CHOICE':
+                    # 送信された値（choice.id）からChoiceオブジェクトを取得して保存
+                    selected_choice = Choice.objects.get(pk=answer_value)
+                    Answer.objects.create(
+                        submission=submission,
+                        question=question,
+                        choice=selected_choice 
+                    )
+                # 自由記述の質問の場合
+                elif question.question_type == 'TEXT':
+                    Answer.objects.create(
+                        submission=submission,
+                        question=question,
+                        content=answer_value
+                    )
+
+        return redirect('sample_app:completion')
+
+    return render(request, 'sample_app/questionnaire.html', {'questions': questions})
+
+# 回答完了ページ表示ビュー
+def completion_view(request):
+    return render(request, 'sample_app/completion.html')
+
+# CSVエクスポートビュー
+def export_answers_to_csv(request):
+    response = HttpResponse(
+        content_type='text/csv',
+        headers={'Content-Disposition': 'attachment; filename="questionnaire_answers.csv"'},
+    )
+    response.write('\ufeff'.encode('utf8'))
+
+    writer = csv.writer(response)
+
+    questions = Question.objects.order_by('order')
+    header = ['送信日時'] + [q.text for q in questions]
+    writer.writerow(header)
+
+    submissions = Submission.objects.prefetch_related('answers__question').order_by('created_at')
+
+    for submission in submissions:
+        answers_dict = {ans.question_id: ans.content for ans in submission.answers.all()}
+        row = [submission.created_at.strftime("%Y-%m-%d %H:%M:%S")]
+        for q in questions:
+            row.append(answers_dict.get(q.id, ''))
+        writer.writerow(row)
+
+    return response
 
 def index(request):
-    """
-    トップページ
-    """
-    # PostFormのインスタンスを作成
-    form = PostForm()
-
-    # contextにフォームを追加
-    context = {
-        'form': form,
-    }
-    
-    # contextをテンプレートに渡してレンダリング
-    return render(request, 'sample_app/index.html', context)
-
-def create_post(request):
-    """
-    新たなデータを作成する
-    """
-    # オブジェクトを新規作成する
-    post = Post()
-
-    # ページロード時
-    if request.method == 'GET':
-        # 新規作成オブジェクトにより form を作成
-        form = PostForm(instance=post)
-
-        # ページロード時は form を Template に渡す
-        return render(request,
-                      'sample_app/post_form.html',  # 呼び出す Template
-                      {'form': form})  # Template に渡すデータ
-
-    # 実行ボタン押下時
-    if request.method == 'POST':
-        # POST されたデータにより form を作成
-        form = PostForm(request.POST, instance=post)
-
-        # 入力されたデータのバリデーション
-        if form.is_valid():
-            # チェック結果に問題なければデータを作成する
-            post = form.save(commit=False)
-            post.save()
-
-        return redirect('sample_app:read_post')
-
-
-def read_post(request):
-    """
-    データの一覧を表示する
-    """
-    # 全オブジェクトを取得
-    posts = Post.objects.all().order_by('id')
-    return render(request,
-                  'sample_app/post_list.html',  # 呼び出す Template
-                  {'posts': posts})  # Template に渡すデータ
-
-
-def edit_post(request, post_id):
-    """
-    対象のデータを編集する
-    """
-    # IDを引数に、対象オブジェクトを取得
-    post = get_object_or_404(Post, pk=post_id)
-
-    # ページロード時
-    if request.method == 'GET':
-        # 対象オブジェクトにより form を作成
-        form = PostForm(instance=post)
-
-        # ページロード時は form とデータIDを Template に渡す
-        return render(request,
-                      'sample_app/post_form.html',  # 呼び出す Template
-                      {'form': form, 'post_id': post_id})  # Template に渡すデータ
-
-    # 実行ボタン押下時
-    elif request.method == 'POST':
-        # POST されたデータにより form を作成
-        form = PostForm(request.POST, instance=post)
-
-        # 入力されたデータのバリデーション
-        if form.is_valid():
-            # チェック結果に問題なければデータを更新する
-            post = form.save(commit=False)
-            post.save()
-
-        # 実行ボタン押下時は処理実行後、一覧画面にリダイレクトする
-        return redirect('sample_app:read_post')
-
-
-def delete_post(request, post_id):
-    # 対象のオブジェクトを取得
-    post = get_object_or_404(Post, pk=post_id)
-    post.delete()
-
-    # 削除リクエスト時は削除実行後、一覧表示画面へリダイレクトする
-    return redirect('sample_app:read_post')
-
-
-class PostForm(ModelForm):
-    """
-    フォーム定義
-    """
-    class Meta:
-        model = Post
-        # fields は models.py で定義している変数名
-        fields = ('Q1', 'micropost')
-        
-def questionnaire_view(request):
-    # ... (既存のアンケートビューのロジック) ...
-    if request.method == 'POST':
-        # ... (既存のPOST処理ロジック) ...
-        # リダイレクト先を新しい完了ページに変更
-        return redirect('sample_app:questionnaire_complete')
-
-# 新しく完了ページ用のビューを追加
-def questionnaire_complete_view(request):
-    return render(request, 'sample_app/questionnaire_complete.html')
-
-
-# def index_view(request):
-#     # 他のテンプレートに渡したいデータがあれば、contextに追加します
-#     context = {
-#         'some_key': 'some_value',
-#     }
-#     return render(request, 'sample_app/index.html', context)
+    return redirect('sample_app:questionnaire')

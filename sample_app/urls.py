@@ -1,11 +1,20 @@
+# sample_app/urls.py
+
 from django.urls import path
-from sample_app import views
+from . import views
 
 app_name = 'sample_app'
+
 urlpatterns = [
-    path('', views.index, name='index'),  # トップページ
-    path('post/create/', views.create_post, name='create_post'),  # 作成
-    path('post/edit/<int:post_id>/', views.edit_post, name='edit_post'),  # 修正
-    path('post/', views.read_post, name='read_post'),   # 一覧表示
-    path('post/delete/<int:post_id>/', views.delete_post, name='delete_post'),   # 削除
+    # アンケートフォームページのURL
+    path('questionnaire/', views.questionnaire_view, name='questionnaire'),
+
+    # 回答完了ページのURL
+    path('completion/', views.completion_view, name='completion'),
+
+    # CSVエクスポート機能のURL
+    path('export/csv/', views.export_answers_to_csv, name='export_csv'),
+
+    # 必要であれば、回答結果を一覧表示するページのURL
+    # path('results/', views.results_view, name='results'),
 ]

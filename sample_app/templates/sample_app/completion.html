@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>送信中...</title>
+</head>
+<body>
+
+    <script>
+        // ページが読み込まれたらすぐに実行
+        window.onload = function() {
+            // 1. ポップアップでメッセージを表示
+            alert('ご回答ありがとうございました！');
+            
+            // 2. ポップアップのOKを押したら、最初のページに戻る
+            window.location.href = "{% url 'sample_app:questionnaire' %}";
+        };
+    </script>
+
+</body>
+</html>
