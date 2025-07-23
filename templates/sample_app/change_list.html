@@ -1,0 +1,67 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+{% endblock %}
+
+
+{% block result_list %}
+{{ block.super }} {# ← 元々のテーブルリストを表示 #}
+
+{# グラフを配置するためのコンテナだけを用意する #}
+<div id="charts-container" style="padding: 20px; display: flex; flex-wrap: wrap; gap: 20px;">
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // admin.pyから渡されたグラフデータのリストを取得
+    const chartsData = {{ charts_data|safe }};
+    // グラフを描画するコンテナを取得
+    const container = document.getElementById('charts-container');
+
+    // 各グラフデータをループして、タイトル(h2)とグラフ(canvas)を動的に作成
+    chartsData.forEach((chartData, index) => {
+        // グラフ１つを囲むdivを作成
+        const chartWrapper = document.createElement('div');
+        chartWrapper.style.width = '45%';
+
+        // グラフのタイトル(h2)を作成
+        const title = document.createElement('h2');
+        title.textContent = chartData.question_text;
+
+        // グラフを描画するcanvasを作成
+        const canvas = document.createElement('canvas');
+        canvas.id = `chart-${index}`; // ユニークなIDを付与
+
+        // 作成した要素をコンテナに追加
+        chartWrapper.appendChild(title);
+        chartWrapper.appendChild(canvas);
+        container.appendChild(chartWrapper);
+
+        // グラフを描画
+        const ctx = canvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'pie', // 円グラフ
+            data: {
+                labels: chartData.labels,
+                datasets: [{
+                    label: '回答数',
+                    data: chartData.data,
+                    backgroundColor: [
+                        'rgba(255, 99, 132, 0.7)',
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 206, 86, 0.7)',
+                        'rgba(75, 192, 192, 0.7)',
+                        'rgba(153, 102, 255, 0.7)',
+                        'rgba(255, 159, 64, 0.7)'
+                    ],
+                    hoverOffset: 4
+                }]
+            }
+        });
+    });
+});
+</script>
+{% endblock %}
