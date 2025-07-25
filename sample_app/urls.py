@@ -1,7 +1,9 @@
 # sample_app/urls.py
-
 from django.urls import path
 from . import views
+
+from django.conf import settings
+from django.conf.urls.static import static
 
 app_name = 'sample_app'
 
@@ -18,3 +20,6 @@ urlpatterns = [
     # 必要であれば、回答結果を一覧表示するページのURL
     # path('results/', views.results_view, name='results'),
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

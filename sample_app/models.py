@@ -10,6 +10,13 @@ class Question(models.Model):
     question_type = models.CharField("質問タイプ", max_length=10, choices=QUESTION_TYPES, default='TEXT')
     order = models.PositiveIntegerField("表示順", default=0, db_index=True)
 
+    image = models.ImageField(
+        "関連画像",
+        upload_to='question_images/', # MEDIA_ROOT/question_images/ に保存される
+        blank=True, # 画像がなくても良い場合はTrue
+        null=True   # データベースにNULLを許容
+    )
+    
     class Meta:
         ordering = ['order']
     

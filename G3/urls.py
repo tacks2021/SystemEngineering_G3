@@ -21,7 +21,7 @@ from sample_app import views
 urlpatterns = [
     path('', views.index, name='home'),
     path('admin/', admin.site.urls),
-    path('sample_app/', include('sample_app.urls')),   # Add
+    path('', include('sample_app.urls')),   # Add
     path('questionnaire/', views.questionnaire_view, name='questionnaire'),
     path('completion/', views.completion_view, name='completion'),
 ]
