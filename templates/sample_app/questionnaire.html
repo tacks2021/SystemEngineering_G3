@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>アンケート</title>
+    <link rel="stylesheet" href="../../sample_app/styles/styles.css">
     <style>
         .question-block {
             margin-bottom: 20px;
@@ -15,6 +16,19 @@
             padding: 8px;
             margin-top: 5px;
         }
+        .admin-link {
+            position: fixed; /* 要素の位置を画面に固定する */
+            bottom: 20px;    /* 画面の下から20pxの位置に配置 */
+            right: 20px;     /* 画面の右から20pxの位置に配置 */
+
+            /* 以下はお好みで調整してください */
+            background-color: #333; /* 背景色 */
+            color: white;           /* 文字色 */
+            padding: 10px 15px;     /* 内側の余白 */
+            border-radius: 5px;     /* 角を丸くする */
+            text-decoration: none;  /* 下線を消す */
+            z-index: 1000;          /* 他の要素より手前に表示させる */
+        }
     </style>
 </head>
 <body>
@@ -26,6 +40,9 @@
 
         {% for question in questions %}
             <div class="question-block">
+                {% if question.image %}
+                    <img src="{{ question.image.url }}" alt="{{ question.text }}" style="max-width: 400px; height: auto;">
+                {% endif %}
                 <p><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>
                 
                 {# 質問タイプが「選択式」の場合 #}
@@ -44,6 +61,11 @@
                 {% endif %}
             </div>
         {% endfor %}
+
+        
+        <a href="{% url 'admin:index' %}" class="admin-link">管理者ページへ</a>
+        
+
 
         <button type="submit">送信する</button>
     </form>
