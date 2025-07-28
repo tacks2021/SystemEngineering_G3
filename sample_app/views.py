@@ -88,7 +88,28 @@ def export_answers_to_csv(request):
 
     return response
 
+def survey_view(request):
+    table_question_texts = [
+        "金額", "スペース", "評価方法", 
+        "メンテナンス", "重さ", "フィードバック", "人工呼吸"
+    ]
+    
+    # orderフィールドの昇順で取得
+    table_questions = Question.objects.filter(
+        text__in=table_question_texts
+    ).order_by('order') 
+    
+    # こちらもorderフィールドの昇順で取得
+    other_questions = Question.objects.exclude(
+        text__in=table_question_texts
+    ).order_by('order')
+    
+    context = {
+        'main_question_text': "...",
+        'table_questions': table_questions,
+        'other_questions': other_questions
+    }
+    return render(request, 'sample_app/survey_form.html', context)
 
-# (変更なし)
 def index(request):
     return redirect('sample_app:questionnaire')
