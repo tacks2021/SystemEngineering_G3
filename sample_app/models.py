@@ -16,6 +16,25 @@ class Question(models.Model):
         blank=True, # 画像がなくても良い場合はTrue
         null=True   # データベースにNULLを許容
     )
+    parent_question = models.ForeignKey(
+        'self',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="親となる質問",
+        help_text="この質問が表示されるきっかけとなる親の質問を選択してください。",
+        related_name="child_questions"
+    )
+
+    trigger_choice = models.ForeignKey(
+        'Choice',  # Choiceモデルへの参照
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        verbose_name="表示のトリガーとなる選択肢",
+        help_text="親質問のどの選択肢が選ばれた時にこの質問を表示するか選択してください。",
+        related_name = '+' # <<< この行を追加
+    )
     
     class Meta:
         ordering = ['order']

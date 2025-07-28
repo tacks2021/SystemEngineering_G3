@@ -56,28 +56,78 @@
         {% csrf_token %}
 
         {% for question in questions %}
-            <div class="question-block">
-                {% if question.image %}
-                    <img src="{{ question.image.url }}" alt="{{ question.text }}" style="max-width: 400px; height: auto;">
-                {% endif %}
-                <p><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>
-                
-                {# 質問タイプが「選択式」の場合 #}
-                {% if question.question_type == 'CHOICE' %}
-                    {% for choice in question.choices.all %}
-                    <label>
-                        <input type="radio" name="answer_for_question_{{ question.id }}" value="{{ choice.id }}" required>
-                        {{ choice.text }}
-                    </label>
-                    <br>
-                    {% endfor %}
+    {# ▼ idを追加し、依存関係があればdata属性とstyleを追加 ▼ #}
+    <div class="question-block"
+         id="question-{{ question.id }}"
+         {% if question.parent_question and question.trigger_choice %}
+             data-parent-id="{{ question.parent_question.id }}"
+             data-trigger-choice-id="{{ question.trigger_choice.id }}"
+             style="display:none;"
+         {% endif %}>
 
-                {# 質問タイプが「自由記述」の場合 #}
-                {% elif question.question_type == 'TEXT' %}
-                    <textarea name="answer_for_question_{{ question.id }}" rows="3" required></textarea>
-                {% endif %}
-            </div>
-        {% endfor %}
+        {% if question.image %}
+            <img src="{{ question.image.url }}" alt="{{ question.text }}" style="max-width: 400px; height: auto;">
+        {% endif %}
+
+        <p><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>
+
+        {# 質問タイプが「選択式」の場合 #}
+        {% if question.question_type == 'CHOICE' %}
+            {% for choice in question.choices.all %}
+            <label>
+                {# ▼ valueには選択肢のIDを指定します ▼ #}
+                <input type="radio" name="answer_for_question_{{ question.id }}" value="{{ choice.id }}" {% if not question.parent_question %}required{% endif %}>
+                {{ choice.text }}
+            </label>
+            <br>
+            {% endfor %}
+
+        {# 質問タイプが「自由記述」の場合 #}
+        {% elif question.question_type == 'TEXT' %}
+            {# ▼ 依存関係がない場合のみrequiredを設定 ▼ #}
+            <textarea name="answer_for_question_{{ question.id }}" rows="3" {% if not question.parent_question %}required{% endif %}></textarea>
+        {% endif %}
+    </div>
+{% endfor %}
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 全てのラジオボタンを取得
+        const allRadios = document.querySelectorAll('input[type="radio"]');
+    
+        allRadios.forEach(radio => {
+            radio.addEventListener('change', function() {
+                // クリックされたラジオボタンが属する質問のIDを取得
+                const parentQuestionDiv = this.closest('.question-block');
+                const parentQuestionId = parentQuestionDiv.id.split('-')[1];
+    
+                // 選択された選択肢のID（value）を取得
+                const selectedChoiceId = this.value;
+    
+                // 全ての質問をチェック
+                const allQuestions = document.querySelectorAll('.question-block');
+                allQuestions.forEach(questionDiv => {
+                    // その質問が表示される条件（親IDとトリガーID）を取得
+                    const requiredParentId = questionDiv.dataset.parentId;
+                    const requiredTriggerId = questionDiv.dataset.triggerChoiceId;
+    
+                    // もし、その質問の親IDが「今クリックされた質問」のIDと一致したら
+                    if (requiredParentId === parentQuestionId) {
+                        const inputs = questionDiv.querySelectorAll('input, textarea');
+
+                        // トリガーとなる選択肢IDが「今選択された選択肢」のIDと一致したら
+                        if (requiredTriggerId === selectedChoiceId) {
+                            questionDiv.style.display = 'block'; // 表示する
+                            inputs.forEach(input => input.required = true); // required属性を追加
+                        } else {
+                            questionDiv.style.display = 'none';  // 隠す
+                            inputs.forEach(input => input.required = false); // required属性を削除
+                        }
+                    }
+                });
+            });
+        });
+    });
+    </script>
 
         
         <a href="{% url 'admin:index' %}" class="admin-link">管理者ページへ</a>
