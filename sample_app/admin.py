@@ -5,8 +5,16 @@ from django.http import HttpResponse
 from django.contrib import admin
 from django.db.models import Count
 from django.utils.html import format_html
+from .graph import create_comparison_chart
 from .models import Question, Choice, Submission, Answer
 import json
+import io
+import base64
+import matplotlib
+matplotlib.use('Agg') 
+import matplotlib.pyplot as plt
+import numpy as np
+import japanize_matplotlib
 
 # --- Submission用エクスポートアクション ---
 def export_submissions_as_csv(modeladmin, request, queryset):
@@ -109,50 +117,46 @@ class AnswerAdmin(admin.ModelAdmin):
 
     # 一覧表示ページ(change_list)の処理を上書き
     def changelist_view(self, request, extra_context=None):
-        # 回答を集計する質問を特定（例としてID=1の質問）
-        TARGET_QUESTION_ID = 1
-
-        # 質問の各選択肢(Choice)が、それぞれ何回答(Answer)されたかを集計
-        chart_data_queryset = Choice.objects.filter(question_id=TARGET_QUESTION_ID).annotate(
-            answer_count=Count('answer')
-        ).values('text', 'answer_count')
-        
-        # テンプレートに渡すためにデータを整形
-        chart_labels = [item['text'] for item in chart_data_queryset]
-        chart_data = [item['answer_count'] for item in chart_data_queryset]
-
-        # extra_contextに集計データを追加
         extra_context = extra_context or {}
-        # json.dumpsでJavaScriptが安全に読み込める形式に変換
-        extra_context['chart_labels'] = json.dumps(chart_labels)
-        extra_context['chart_data'] = json.dumps(chart_data)
-        
-    def changelist_view(self, request, extra_context=None):
-        # 質問タイプが「選択式」の質問をすべて取得
-        choice_questions = Question.objects.filter(question_type='CHOICE')
+        categories = ["人工呼吸", "フィードバック", "重さ", "メンテナンス", "評価方法", "スペース", "金額"]
+        choice1_text = 'マネキン'
+        choice2_text = 'VR'
 
-        # 各質問のグラフデータを格納するリスト
-        charts_data = []
+        group1_counts = []
+        group2_counts = []
 
-        for question in choice_questions:
-            # 質問ごとに回答を集計
-            chart_data_queryset = Choice.objects.filter(question=question).annotate(
-                answer_count=Count('answer')
-            ).values('text', 'answer_count')
+        for category_text in categories:
+            question = Question.objects.filter(text=category_text).first()
+            # 質問がデータベースに存在する場合
             
-            labels = [item['text'] for item in chart_data_queryset]
-            data = [item['answer_count'] for item in chart_data_queryset]
+            if question:
+                # その質問に対して「マネキン」と回答された数をカウント
+                count1 = Answer.objects.filter(question=question, choice__text=choice1_text).count()
+                
+                # その質問に対して「VR」と回答された数をカウント
+                count2 = Answer.objects.filter(question=question, choice__text=choice2_text).count()
+                
+                group1_counts.append(count1)
+                group2_counts.append(count2)
+            else:
+                # 質問がデータベースに存在しない場合は、グラフが崩れないように0を追加
+                group1_counts.append(0)
+                group2_counts.append(0)
 
-            # グラフ1つ分のデータを辞書として追加
-            charts_data.append({
-                'question_text': question.text,
-                'labels': labels,
-                'data': data,
-            })
-
-        extra_context = extra_context or {}
-        # グラフデータのリストをJSON形式でテンプレートに渡す
-        extra_context['charts_data'] = json.dumps(charts_data)
+        # =================================================================
+        # 2. graph.pyの関数を呼び出してグラフ画像を生成
+        # =================================================================
+        # 以前の長いMatplotlibのコードが、この1行に置き換わる！
+        chart_image_base64 = create_comparison_chart(
+            categories, 
+            group1_counts, 
+            group2_counts,
+            choice1_text, # ラベル用にテキストも渡す
+            choice2_text
+        )
+        
+        # extra_contextに画像データを追加
+        extra_context['matplotlib_chart'] = chart_image_base64
         
         return super().changelist_view(request, extra_context=extra_context)
 

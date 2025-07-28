@@ -10,8 +10,25 @@
 {% block result_list %}
 {{ block.super }} {# ← 元々のテーブルリストを表示 #}
 
-{# グラフを配置するためのコンテナだけを用意する #}
-<div id="charts-container" style="padding: 20px; display: flex; flex-wrap: wrap; gap: 20px;">
+{# --- ここからグラフ表示エリア --- #}
+<div style="padding: 20px;">
+    
+    {# 1. Matplotlibで生成したグラフを表示 #}
+    <div>
+        {% if matplotlib_chart %}
+            <h2>項目別比較グラフ</h2>
+            <img src="data:image/png;base64,{{ matplotlib_chart }}" alt="Matplotlib Chart" style="max-width: 800px; height: auto;">
+        {% endif %}
+    </div>
+
+    <hr style="margin: 40px 0;">
+
+    {# 2. Chart.jsで生成する円グラフのコンテナ #}
+    <h2>各質問の回答比率（円グラフ）</h2>
+    <div id="charts-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+    </div>
+
+
 </div>
 
 <script>
@@ -26,9 +43,10 @@ document.addEventListener("DOMContentLoaded", function() {
         // グラフ１つを囲むdivを作成
         const chartWrapper = document.createElement('div');
         chartWrapper.style.width = '45%';
+        chartWrapper.style.minWidth = '300px'; // 小画面でも見やすいように最小幅を指定
 
-        // グラフのタイトル(h2)を作成
-        const title = document.createElement('h2');
+        // Chart.jsではタイトルはオプションで表示できるため、h2は不要なら削除してもOK
+        const title = document.createElement('h3'); // h2からh3に変更
         title.textContent = chartData.question_text;
 
         // グラフを描画するcanvasを作成
