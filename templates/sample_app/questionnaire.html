@@ -29,6 +29,23 @@
             text-decoration: none;  /* 下線を消す */
             z-index: 1000;          /* 他の要素より手前に表示させる */
         }
+        .post_button {
+            padding: 10px 20px; /* 見た目を調整 */
+            font-size: 16px;
+            margin-bottom: 10px ;
+            border-radius: 5px;
+            
+        }
+        .post_button:hover {
+            background-color: #9BD4B5; 
+            transform: scale(1.05);   /* 少しだけ大きくする */
+        }
+         footer {
+            background-color: #f0f0f0; /* 背景色 */
+            padding: 50px; /* 内側の余白 */
+            text-align: center; /* テキストを中央揃えに */
+            margin-top: 50px; /* メインコンテンツとの間に余白を設ける */
+         }
     </style>
 </head>
 <body>
@@ -67,7 +84,7 @@
         
 
 
-        <button type="submit">送信する</button>
+        <button type="submit" class="post_button">送信する</button>
     </form>
 
 </body>
