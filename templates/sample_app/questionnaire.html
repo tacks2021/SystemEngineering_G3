@@ -3,8 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <title>アンケート</title>
-    <link rel="stylesheet" href="../../sample_app/styles/styles.css">
     <style>
+        #font-size-controls {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            z-index: 1001;
+        }
+        .font-size-btn {
+            padding: 5px 10px;
+            margin-left: 5px;
+            cursor: pointer;
+            border: 1px solid #ccc;
+            border-radius: 3px;
+            background-color: white; /* 通常のボタンの背景色 */
+        }
+        .font-size-btn.active {
+            background-color: #333; /* 選択中ボタンの背景色 */
+            color: white;           /* 選択中ボタンの文字色 */
+        }
         .question-block {
             margin-bottom: 20px;
             padding: 15px;
@@ -17,125 +34,126 @@
             margin-top: 5px;
         }
         .admin-link {
-            position: fixed; /* 要素の位置を画面に固定する */
-            bottom: 20px;    /* 画面の下から20pxの位置に配置 */
-            right: 20px;     /* 画面の右から20pxの位置に配置 */
-
-            /* 以下はお好みで調整してください */
-            background-color: #333; /* 背景色 */
-            color: white;           /* 文字色 */
-            padding: 10px 15px;     /* 内側の余白 */
-            border-radius: 5px;     /* 角を丸くする */
-            text-decoration: none;  /* 下線を消す */
-            z-index: 1000;          /* 他の要素より手前に表示させる */
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background-color: #333;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            text-decoration: none;
+            z-index: 1000;
         }
         .post_button {
-            padding: 10px 20px; /* 見た目を調整 */
+            padding: 10px 20px;
             font-size: 16px;
-            margin-bottom: 10px ;
+            margin-bottom: 10px;
             border-radius: 5px;
-            
         }
         .post_button:hover {
-            background-color: #9BD4B5; 
-            transform: scale(1.05);   /* 少しだけ大きくする */
+            background-color: #9BD4B5;
+            transform: scale(1.05);
         }
          footer {
-            background-color: #f0f0f0; /* 背景色 */
-            padding: 50px; /* 内側の余白 */
-            text-align: center; /* テキストを中央揃えに */
-            margin-top: 50px; /* メインコンテンツとの間に余白を設ける */
+            background-color: #f0f0f0;
+            padding: 50px;
+            text-align: center;
+            margin-top: 50px;
          }
     </style>
 </head>
 <body>
+    <div id="font-size-controls">
+        <button class="font-size-btn active" data-size="100%">標準</button>
+        <button class="font-size-btn" data-size="125%">大</button>
+        <button class="font-size-btn" data-size="150%">特大</button>
+    </div>
+
     <h1>アンケートフォーム</h1>
-    <p>すべての質問にご回答ください。</p>
+    <p>近年、COVID-19をきっかけとして「一人で練習できる」という観点からVRを用いた体験型医療教育への関心が高まってきている。一方、現在VRを用いた心肺蘇生法（CPR）に関する研究や商品はいくつか存在するが、高価な医療器具や人体モデルを使用するなど、価格や場所の確保に関して課題がある。医療教育現場においても公平かつ定量的な評価システムが必要とされており、現在AEDを組み込んだCPR訓練システムの開発が必要とされている。
+        <br><br>以下の質問にご回答ください。</p>
 
     <form method="post">
         {% csrf_token %}
 
         {% for question in questions %}
-    {# ▼ idを追加し、依存関係があればdata属性とstyleを追加 ▼ #}
-    <div class="question-block"
-         id="question-{{ question.id }}"
-         {% if question.parent_question and question.trigger_choice %}
-             data-parent-id="{{ question.parent_question.id }}"
-             data-trigger-choice-id="{{ question.trigger_choice.id }}"
-             style="display:none;"
-         {% endif %}>
+        <div class="question-block"
+             id="question-{{ question.id }}"
+             {% if question.parent_question and question.trigger_choice %}
+                 data-parent-id="{{ question.parent_question.id }}"
+                 data-trigger-choice-id="{{ question.trigger_choice.id }}"
+                 style="display:none;"
+             {% endif %}>
 
-        {% if question.image %}
-            <img src="{{ question.image.url }}" alt="{{ question.text }}" style="max-width: 400px; height: auto;">
-        {% endif %}
+            {% if question.image %}
+                <img src="{{ question.image.url }}" alt="{{ question.text }}" style="max-width: 400px; height: auto;">
+            {% endif %}
 
-        <p><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>
+            <p><strong>{{ forloop.counter }}. {{ question.text }}</strong></p>
 
-        {# 質問タイプが「選択式」の場合 #}
-        {% if question.question_type == 'CHOICE' %}
-            {% for choice in question.choices.all %}
-            <label>
-                {# ▼ valueには選択肢のIDを指定します ▼ #}
-                <input type="radio" name="answer_for_question_{{ question.id }}" value="{{ choice.id }}" {% if not question.parent_question %}required{% endif %}>
-                {{ choice.text }}
-            </label>
-            <br>
-            {% endfor %}
+            {% if question.question_type == 'CHOICE' %}
+                {% for choice in question.choices.all %}
+                <label>
+                    <input type="radio" name="answer_for_question_{{ question.id }}" value="{{ choice.id }}" {% if not question.parent_question %}required{% endif %}>
+                    {{ choice.text }}
+                </label>
+                <br>
+                {% endfor %}
 
-        {# 質問タイプが「自由記述」の場合 #}
-        {% elif question.question_type == 'TEXT' %}
-            {# ▼ 依存関係がない場合のみrequiredを設定 ▼ #}
-            <textarea name="answer_for_question_{{ question.id }}" rows="3" {% if not question.parent_question %}required{% endif %}></textarea>
-        {% endif %}
-    </div>
-{% endfor %}
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // 全てのラジオボタンを取得
-        const allRadios = document.querySelectorAll('input[type="radio"]');
-    
-        allRadios.forEach(radio => {
-            radio.addEventListener('change', function() {
-                // クリックされたラジオボタンが属する質問のIDを取得
-                const parentQuestionDiv = this.closest('.question-block');
-                const parentQuestionId = parentQuestionDiv.id.split('-')[1];
-    
-                // 選択された選択肢のID（value）を取得
-                const selectedChoiceId = this.value;
-    
-                // 全ての質問をチェック
-                const allQuestions = document.querySelectorAll('.question-block');
-                allQuestions.forEach(questionDiv => {
-                    // その質問が表示される条件（親IDとトリガーID）を取得
-                    const requiredParentId = questionDiv.dataset.parentId;
-                    const requiredTriggerId = questionDiv.dataset.triggerChoiceId;
-    
-                    // もし、その質問の親IDが「今クリックされた質問」のIDと一致したら
-                    if (requiredParentId === parentQuestionId) {
-                        const inputs = questionDiv.querySelectorAll('input, textarea');
+            {% elif question.question_type == 'TEXT' %}
+                <textarea name="answer_for_question_{{ question.id }}" rows="3" {% if not question.parent_question %}required{% endif %}></textarea>
+            {% endif %}
+        </div>
+        {% endfor %}
 
-                        // トリガーとなる選択肢IDが「今選択された選択肢」のIDと一致したら
-                        if (requiredTriggerId === selectedChoiceId) {
-                            questionDiv.style.display = 'block'; // 表示する
-                            inputs.forEach(input => input.required = true); // required属性を追加
-                        } else {
-                            questionDiv.style.display = 'none';  // 隠す
-                            inputs.forEach(input => input.required = false); // required属性を削除
+        <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const fontButtons = document.querySelectorAll('.font-size-btn');
+            const contentBody = document.body;
+
+            fontButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    fontButtons.forEach(btn => btn.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const newSize = this.dataset.size;
+                    contentBody.style.fontSize = newSize;
+                });
+            });
+
+            const allRadios = document.querySelectorAll('input[type="radio"]');
+        
+            allRadios.forEach(radio => {
+                radio.addEventListener('change', function() {
+                    const parentQuestionDiv = this.closest('.question-block');
+                    const parentQuestionId = parentQuestionDiv.id.split('-')[1];
+                    const selectedChoiceId = this.value;
+        
+                    const allQuestions = document.querySelectorAll('.question-block');
+                    allQuestions.forEach(questionDiv => {
+                        const requiredParentId = questionDiv.dataset.parentId;
+                        const requiredTriggerId = questionDiv.dataset.triggerChoiceId;
+        
+                        if (requiredParentId === parentQuestionId) {
+                            const inputs = questionDiv.querySelectorAll('input, textarea');
+
+                            if (requiredTriggerId === selectedChoiceId) {
+                                questionDiv.style.display = 'block';
+                                inputs.forEach(input => input.required = true);
+                            } else {
+                                questionDiv.style.display = 'none';
+                                inputs.forEach(input => input.required = false);
+                            }
                         }
-                    }
+                    });
                 });
             });
         });
-    });
-    </script>
+        </script>
 
-        
         <a href="{% url 'admin:index' %}" class="admin-link">管理者ページへ</a>
         
-
-
         <button type="submit" class="post_button">送信する</button>
     </form>
-
 </body>
 </html>
