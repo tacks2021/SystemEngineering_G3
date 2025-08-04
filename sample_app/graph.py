@@ -24,8 +24,9 @@ def create_comparison_chart(categories, group1_data, group2_data, choice1_text='
     ax.barh(categories, group1_percentage, label=choice1_text, color=colors[0])
     ax.barh(categories, group2_percentage, left=group1_percentage, label=choice2_text, color=colors[1])
 
-    ax.set_xlabel('パーセント')
-    ax.set_title(f'{choice1_text}と{choice2_text}の比較', fontsize=16)
+    plt.rcParams["font.size"] = 20
+    ax.set_xlabel('パーセント', fontsize=20)
+    ax.set_title(f'{choice1_text}と{choice2_text}の比較', fontsize=20)
     ax.legend(loc='lower right')
     plt.tight_layout()
 
